@@ -77,7 +77,7 @@ fn player_movement(
         let mut jump = 0.0;
 
         // go left
-        if (rb_velocity.linvel[1] > 0.0 && rb_velocity.linvel[0] < 0.0)
+        if (rb_velocity.linvel[1] != 0.0 && rb_velocity.linvel[0] < 0.0)
             || (rb_velocity.linvel[1] == 0.0)
         {
             // sprint left
@@ -90,7 +90,7 @@ fn player_movement(
         }
 
         // go right
-        if (rb_velocity.linvel[1] > 0.0 && rb_velocity.linvel[0] > 0.0)
+        if (rb_velocity.linvel[1] != 0.0 && rb_velocity.linvel[0] > 0.0)
             || (rb_velocity.linvel[1] == 0.0)
         {
             // sprint right
