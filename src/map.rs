@@ -2,7 +2,7 @@ use crate::SCALE;
 use bevy::prelude::*;
 use bevy_rapier2d::{
     physics::{ColliderBundle, ColliderPositionSync},
-    prelude::ColliderShape,
+    prelude::*,
     render::ColliderDebugRender,
 };
 
@@ -33,6 +33,10 @@ fn boundaries(
         ColliderBundle {
             position: [x, y].into(),
             shape: ColliderShape::cuboid(w, h),
+            material: ColliderMaterial {
+                friction: 0.0,
+                ..Default::default()
+            },
             ..Default::default()
         }
     };

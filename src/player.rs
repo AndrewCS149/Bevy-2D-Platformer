@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::{prelude::*, rapier::na::Vector2};
 
 use crate::{Player, Speed, SCALE};
-const PLAYER_SPEED: f32 = 5.0;
+const PLAYER_SPEED: f32 = 3.0;
 
 pub struct PlayerPlugin;
 
@@ -30,6 +30,10 @@ fn spawn_player(
     let collider = ColliderBundle {
         shape: ColliderShape::cuboid(player_size, player_size),
         position: [-player_x, -10.0].into(),
+        material: ColliderMaterial {
+            friction: 0.0,
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -106,15 +110,15 @@ fn player_movement(
         if rb_velocity.linvel[1] == 0.0 {
             // power jump
             if keys.pressed(KeyCode::LShift) && keys.just_pressed(KeyCode::Space) {
-                jump = 50.0;
+                jump = 65.0;
                 // normal jump
             } else if keys.just_pressed(KeyCode::Space) {
-                jump = 35.0;
+                jump = 50.0;
             }
         }
 
+        eprintln!("{}", rb_velocity.linvel[0]);
         let move_delta = Vector2::new(direction, jump);
-
         rb_velocity.linvel += move_delta * PLAYER_SPEED;
     }
 }
