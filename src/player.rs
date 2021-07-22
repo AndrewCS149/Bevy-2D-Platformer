@@ -117,7 +117,7 @@ fn player_movement(
             }
         }
 
-        eprintln!("{}", rb_velocity.linvel[0]);
+        // eprintln!("{}", rb_velocity.linvel[0]);
         let move_delta = Vector2::new(direction, jump);
         rb_velocity.linvel += move_delta * PLAYER_SPEED;
     }

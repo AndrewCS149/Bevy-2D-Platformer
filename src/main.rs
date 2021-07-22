@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use bevy::render::pass::ClearColor;
 use bevy::window::WindowMode;
-use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
+use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier2d::{physics::*, prelude::*};
-
 mod map;
 mod player;
 
