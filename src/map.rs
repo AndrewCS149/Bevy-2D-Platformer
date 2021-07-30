@@ -21,14 +21,6 @@ fn map_matrix(
     windows: Res<Windows>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    /*
-    2560 / 10 (SCALE) / 12 = 21.333333
-    1440 / 10 (SCALE) / 12 = 12
-
-    1 unit width = 10.665
-    1 unit length = 6
-    */
-
     let window = windows.get_primary().unwrap();
 
     let map = [
@@ -43,60 +35,47 @@ fn map_matrix(
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    let mut x_conversion = HashMap::new();
-    x_conversion.insert(0, -6);
-    x_conversion.insert(1, -5);
-    x_conversion.insert(2, -4);
-    x_conversion.insert(3, -3);
-    x_conversion.insert(4, -2);
-    x_conversion.insert(5, -1);
-    x_conversion.insert(6, 1);
-    x_conversion.insert(7, 2);
-    x_conversion.insert(8, 3);
-    x_conversion.insert(9, 4);
-    x_conversion.insert(10, 5);
-    x_conversion.insert(11, 6);
-    // println!("{}", pos_conversion.get(&0).unwrap());
+    let mut xy_conversion = HashMap::new();
+    xy_conversion.insert(1, -6);
+    xy_conversion.insert(2, -5);
+    xy_conversion.insert(3, -4);
+    xy_conversion.insert(4, -3);
+    xy_conversion.insert(5, -2);
+    xy_conversion.insert(6, -1);
+    xy_conversion.insert(7, 1);
+    xy_conversion.insert(8, 2);
+    xy_conversion.insert(9, 3);
+    xy_conversion.insert(10, 4);
+    xy_conversion.insert(11, 5);
+    xy_conversion.insert(12, 6);
 
-    let unit_width = window.width() / SCALE / 12.0;
-    let unit_height = window.height() / SCALE / 12.0 / 2.0;
+    let unit_width = window.width() / SCALE / 12.0 / 2.0; // 10.666667
+    let unit_height = window.height() / SCALE / 12.0; // 12
 
-    // a closure
-    let collider = |x: f32, y: f32, w: f32, h: f32| -> ColliderBundle {
-        ColliderBundle {
-            position: [x, y].into(),
-            shape: ColliderShape::cuboid(w, h),
-            material: ColliderMaterial {
-                friction: 0.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        }
-    };
-
-    let height = 0;
-    for (r, row) in map.iter().enumerate() {
+    for (i, row) in map.iter().enumerate() {
         // collider width in units as defined above
         let mut units = 0;
         let mut starting_idx = 0;
-        for (c, col) in row.iter().enumerate() {
+        for (j, col) in row.iter().enumerate() {
             if col != &0 {
                 units += 1;
-            } else {
-                starting_idx = col.clone();
+                if starting_idx == 0 {
+                    starting_idx = j + 1;
+                }
             }
 
-            if &units > &0 && map[r][c + 1] == 0 || &units > &0 && c + 1 > row.len() {
-                let collider_width = units as f32 * unit_width;
-                println!("width {}", collider_width);
-                let collider_height = unit_height;
+            if &units > &0 && col == &0 || &units > &0 && j == map[i].len() - 1 {
+                let mut collider_width = units as f32 * unit_width;
+                let mut collider_height = unit_height;
+
                 let collider_x =
-                    x_conversion.get(&starting_idx).unwrap().clone() as f32 * unit_width;
-                // let collider_x = -((row.len() - c) as f32 * unit_width);
-                let collider_y = -((map.len() - (map.len() - r)) as f32 * unit_height);
+                    xy_conversion.get(&starting_idx).unwrap().clone() as f32 * unit_width * 2.0;
+
+                let collider_y =
+                    (xy_conversion.get(&(i + 1)).unwrap().clone() * -1) as f32 * unit_height;
 
                 let sprite = SpriteBundle {
                     material: materials.add(Color::rgb(0.08, 0.58, 0.0).into()),
@@ -107,32 +86,50 @@ fn map_matrix(
                     ..Default::default()
                 };
 
+                #[derive(Debug)]
+                struct Thing {
+                    collider_x: f32,
+                    collider_width: f32,
+                    collider_height: f32,
+                    units: i32,
+                    starting_idx: usize,
+                    x_map: i32,
+                }
+
+                let my_thing = Thing {
+                    collider_x,
+                    collider_width,
+                    collider_height,
+                    units,
+                    starting_idx,
+                    x_map: xy_conversion.get(&starting_idx).unwrap().clone(),
+                };
+
+                println!("{:#?}", my_thing);
+
+                starting_idx = col.clone();
                 units = 0;
+
                 commands
                     .spawn()
                     .insert_bundle(sprite)
-                    .insert_bundle(collider(
-                        collider_x,
-                        collider_y,
-                        collider_width,
-                        collider_height,
-                    ))
+                    .insert_bundle(ColliderBundle {
+                        position: [collider_x, collider_y].into(),
+                        shape: ColliderShape::cuboid(collider_width, collider_height),
+                        material: ColliderMaterial {
+                            friction: 0.0,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
                     .insert(ColliderDebugRender::default())
                     .insert(ColliderPositionSync::Discrete);
             }
-
-            // if col == &1 {
-            // } else if col == &2 {
-            // }
         }
     }
 }
 
-fn boundaries(
-    mut commands: Commands,
-    windows: Res<Windows>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+fn boundaries(mut commands: Commands, windows: Res<Windows>) {
     let window = windows.get_primary().unwrap();
 
     // a closure to use for the left, right, bottom and top colliders of the map
@@ -168,24 +165,4 @@ fn boundaries(
     let y = window.height() / 2.0 / SCALE + height;
 
     commands.spawn_bundle(collider(x, y, width, height));
-
-    // bottom
-    // let height = 5.0;
-
-    // let sprite = SpriteBundle {
-    //     material: materials.add(Color::rgb(0.08, 0.58, 0.0).into()),
-    //     // the sprite vector is directly proportionate to the collider size.
-    //     // eg 1: a new vec of 'x: 1.0, y: 1.0' is the same exact size as the collider
-    //     // eg 2: a vec of 'x: 2.0, y: 2.0' is twice as large as the collider
-    //     sprite: Sprite::new(Vec2::new(1.0, 1.0)),
-    //     ..Default::default()
-    // };
-
-    // commands
-    //     .spawn()
-    //     .insert_bundle(sprite)
-    //     .insert_bundle(collider(x, -y, width, height))
-    //     .insert(ColliderDebugRender::default())
-    //     // syncs the collider position with the sprite position
-    //     .insert(ColliderPositionSync::Discrete);
 }
